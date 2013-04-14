@@ -1,0 +1,140 @@
+<html>
+<meta charset="UTF-8">
+<head>
+</head>
+<body>
+    <p> {{ img.name }} </p>
+    <p id="line" onclick="select(line)">Line tool</p>
+    <p id="pencil" onclick="select(pencil)">Pencil tool</p>
+    <p id="eraser" onclick="select(eraser)">Eraser tool</p>
+    <p id="event"> Last did: nothing</p>
+    <a href="/polls/rename"> Rename your masterpiece </p>
+    <canvas id="can" 
+        width="500" 
+        height="500"
+        style="border:1px solid black;">
+    </canvas>
+    
+    <script>
+        var c = document.getElementById("can");
+        var context = c.getContext("2d");
+        var drawLine = false;
+        var mouseDown = false;
+        var selectedElement = document.getElementById("line");
+        var prevX;
+        var prevY;
+        var position =
+        {
+            left: c.offsetLeft,
+            top: c.offsetTop
+        };
+        function select(element) {
+            selectedElement = element;
+            document.getElementById("event").textContent = "Last did: Selected " + element.textContent;
+        }
+        function lineToolDown(e) {
+            var text = document.getElementById("event");
+            if (drawLine) 
+            {
+                context.moveTo(prevX, prevY);
+                context.lineTo(e.pageX - position.left, e.pageY - position.top);
+                context.stroke();
+                text.textContent = "Last did: Drew line";
+            }
+            else
+            {
+                prevX = e.pageX - position.left;
+                prevY = e.pageY - position.top;
+                text.textContent = "Last did: Selected start point";
+            }
+            drawLine = !drawLine;
+        }
+        function pencilToolDown(e) {
+            mouseDown = true;
+            prevX = e.pageX - position.left;
+            prevY = e.pageY - position.top;
+        }
+        function eraserToolDown(e) {
+            mouseDown = true;
+            prevX = e.pageX - position.left;
+            prevY = e.pageY - position.top;
+        }
+        function pencilToolUp(e) {
+            mouseDown = false;
+        }
+        function eraserToolUp(e) {
+            mouseDown = false;
+        }
+        function pencilToolMove(e) {
+            // Pencil tool essentially draws lots of lines
+            if (mouseDown) {
+                var currX = e.pageX - position.left;
+                var currY = e.pageY - position.top;
+                context.moveTo(prevX, prevY);
+                context.lineTo(currX, currY);
+                context.stroke();
+                prevX = currX;
+                prevY = currY;
+                document.getElementById("event").textContent = "Last did: Drew with pencil";
+            }
+        }
+        function eraserToolMove(e) {
+            // Eraser tool is a pencil tool that draws white
+            var eraserWidth = 5;
+            if (mouseDown) {
+                var currX = e.pageX - position.left;
+                var currY = e.pageY - position.top;
+                // Draw a rectangle (covers all intermediate points
+                context.beginPath();
+                context.arc(currX, currY, eraserWidth, 0, 2*Math.PI);
+                context.fillStyle = 'white';
+                context.fill();
+                context.closePath();
+                prevX = currX;
+                prevY = currY;
+                document.getElementById("event").textContent = "Last did: Erased";
+            }
+        }
+        function callDrawToolDown(e) {
+            if (selectedElement.id == "pencil") {
+                pencilToolDown(e);
+            } else if (selectedElement.id == "line") {
+                lineToolDown(e);
+            } else if (selectedElement.id == "eraser") {
+                eraserToolDown(e);
+            }
+        }
+        function callDrawToolUp(e) {
+            if (selectedElement.id == "pencil") {
+                pencilToolUp(e);
+            } else if (selectedElement.id == "line") {
+                ;
+            } else if (selectedElement.id == "eraser") {
+                eraserToolUp(e);
+            }
+        }
+        function callDrawToolMove(e) {
+            if (selectedElement.id == "pencil") {
+                pencilToolMove(e);
+            } else if (selectedElement.id == "line") {
+                ;
+            } else if (selectedElement.id == "eraser") {
+                eraserToolMove(e);
+            }
+        }
+        c.onmousedown = function(e) {
+            callDrawToolDown(e);
+        };
+        c.onmouseup = function(e) {
+            callDrawToolUp(e);
+        };
+        c.onmousemove = function(e) {
+            callDrawToolMove(e);
+        }
+        var save = document.getElementById("save");
+        save.onmousedown = function(e) {
+            var data = c.toDataURL("image.png");
+        }
+    </script>
+</body>
+</html>
